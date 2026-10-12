@@ -1,0 +1,15 @@
+.venv/
+venv/
+.localdeps/
+__pycache__/
+.pytest_cache/
+.env
+evaluation/snapshots/
+node_modules/
+.env
+.env.*
+!.env.example
+dist/
+venv/
+.venv/
+__pycache__/

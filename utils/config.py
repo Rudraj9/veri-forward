@@ -1,0 +1,18 @@
+"""Conservative MVP heuristics; tune on development data, not the test set."""
+import os
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class Settings:
+    relevance_threshold: float = float(os.getenv("RELEVANCE_THRESHOLD", "0.40"))
+    nli_threshold: float = float(os.getenv("NLI_THRESHOLD", "0.85"))
+    nli_margin: float = 0.30
+    max_articles: int = 8
+    max_passages: int = 12
+    official_domains: tuple = tuple(filter(None, os.getenv("OFFICIAL_DOMAINS", "").split(",")))
+    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    nli_model: str = "cross-encoder/nli-MiniLM2-L6-H768"
+
+
+settings = Settings()

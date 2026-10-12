@@ -1,0 +1,2 @@
+{"id":"synthetic-dev-01","split":"dev","claim":"RBI raised the rate to 6% in Delhi in 2025.","label":"insufficient_evidence","rationale":"Synthetic format example only, not a labelled real-world fact.","reference_urls":[],"event_date":null,"annotated_at":null}
+{"id":"synthetic-test-01","split":"test","claim":"A synthetic demonstration claim has no supplied evidence.","label":"insufficient_evidence","rationale":"Synthetic format example; replace with independently annotated claims.","reference_urls":[],"event_date":null,"annotated_at":null}
