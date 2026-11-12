@@ -1,0 +1,154 @@
+<style>
+/* ── Dark palette ─────────────────────────────────────────────────────────
+   Overrides the token names declared in styles.css. Injected only when the
+   user enables dark mode, so both palettes never apply at once.
+   Also remaps Streamlit's own theme variables so built-in widgets follow. */
+:root {
+  color-scheme: dark;
+
+  --paper: #0c1310;
+  --paper-raised: #131d18;
+  --paper-sunken: #0f1915;
+  --paper-tint: #1c2b21;
+
+  --ink: #e9f1e9;
+  --ink-soft: #c3d2c8;
+  --muted: #a2b3a8;
+
+  --line: #24332b;
+  --line-strong: #33463b;
+
+  --lime: #cbe98a;
+  --lime-ink: #10261c;
+  --focus: #a8d96f;
+
+  --support: #9ed07a;
+  --contradict: #e8a08a;
+  --warn-bg: #2b2412;
+  --warn-ink: #f0cf8a;
+  --warn-line: #4a3f1f;
+
+  --hero-bg: #10261d;
+  --hero-ink: #f2fbef;
+  --hero-muted: #b6cbbd;
+  --hero-line: #35543f;
+  --hero-art-bg: #1a2a20;
+  --hero-art-ink: #e9f1e9;
+
+  --field-bg: #101a15;
+  --field-border: #2b3d32;
+
+  --shadow-card: 0 1px 2px #00000066;
+  --shadow-raised: 0 18px 40px #00000073;
+}
+
+.stApp {
+  --background-color: var(--paper);
+  --secondary-background-color: var(--paper-raised);
+  --text-color: var(--ink);
+  --primary-color: var(--lime);
+  background: var(--paper);
+  color: var(--ink);
+}
+[data-testid="stAppViewContainer"], [data-testid="stSidebarContent"] { background: var(--paper); }
+[data-testid="stSidebar"] { background: var(--paper-raised); border-right: 1px solid var(--line); }
+
+/* Brand and hero */
+.brand-mark { background: var(--lime); color: var(--lime-ink); }
+.brand-tag { border-left-color: var(--line-strong); }
+.message-avatar { background: #25382c; color: var(--hero-art-ink); }
+.message-card small { color: #9db09b; }
+.message-line { background: #2f4436; }
+.question-mark { color: #8fae86; }
+
+/* Surfaces that were hardcoded light */
+.section-label > span { color: #b6d69a; }
+.guide-card { background: #16241c; border-color: #26382c; }
+.guide-card .eyebrow { color: #a8c98a; }
+.guide-item > span { color: #93b878; }
+.honesty-card { background: #221f14; border-color: #3a3420; }
+.honesty-card > span { color: #d4b96a; }
+.honesty-card b { color: #e8dcb4; }
+.honesty-card p { color: #c9bd97; }
+.result-copy p { color: var(--ink-soft); }
+
+/* Widgets */
+[data-testid="stRadio"] label { background: #16241c; border-color: #2b3d32; }
+[data-testid="stRadio"] label:hover { border-color: #3d5443; }
+[data-testid="stTextArea"] textarea::placeholder,
+[data-testid="stTextInput"] input::placeholder { color: #7d8f82; }
+.stButton button[kind="primary"] { background: var(--lime); border-color: var(--lime); color: var(--lime-ink); }
+.stButton button[kind="primary"]:hover { background: #d8f0a6; border-color: #d8f0a6; }
+.stButton button[kind="primary"]:disabled { background: #25332b; border-color: #25332b; color: #6f7f74; }
+.stButton button[kind="secondary"], .stDownloadButton button, .stLinkButton a { background: #16241c; border-color: #2b3d32; color: var(--ink); }
+[data-testid="stAlert"] { background: var(--paper-sunken); color: var(--ink); }
+
+/* Result tones re-tuned for a dark surface */
+.result-dashboard { --tone: #a7d88a; --tone-soft: #2e4a35; --tone-paper: #14251b; --tone-ink: #d6f0c4; }
+.result-dashboard.contradicted { --tone: #eaa78f; --tone-soft: #4a2f27; --tone-paper: #261814; --tone-ink: #f8d9cd; }
+.result-dashboard.mixed { --tone: #e8c77a; --tone-soft: #4a3f1f; --tone-paper: #251f10; --tone-ink: #f6e6b8; }
+.result-dashboard.insufficient { --tone: #9dc0e0; --tone-soft: #2b3d4a; --tone-paper: #14202a; --tone-ink: #d3e6f7; }
+
+.insight-icon { color: #8fb573; }
+.strength-segments i.filled { background: #8fc46a; }
+.balance-support { background: #8fc46a; }
+.balance-contradict { background: #d99479; }
+.support-label { color: #a8d98a; }
+.contradict-label { color: #e8a78f; }
+
+.evidence-heading > span { background: #1e3226; color: #a8d98a; }
+.evidence-heading.contradict > span { background: #33211c; color: #e8a78f; }
+.passage-card { border-top-color: #8fc46a; }
+.passage-card.contradict { border-top-color: #cf8f77; }
+.passage-card blockquote { color: var(--ink-soft); }
+.passage-card blockquote::before { color: #9ec47c; }
+.passage-card a:hover { color: #b6e08d; }
+.empty-evidence > span { color: #8fae86; }
+.reply-heading .eyebrow { color: #a8c98a; }
+
+/* Source coverage badges and rails */
+.source-card.support { border-left-color: #8fc46a; }
+.source-card.contradict { border-left-color: #d99479; }
+.source-badge.support { color: #a8d98a; border-color: #2e4a35; background: #14251b; }
+.source-badge.contradict { color: #eaa78f; border-color: #4a2f27; background: #261814; }
+.source-badge { color: var(--ink-soft); }
+
+/* Active step inverts: lime disc with dark ink, not light ink with lime text */
+.workflow-step.active > span { background: var(--lime); border-color: var(--lime); color: var(--lime-ink); }
+.section-label > span { color: #c6e2ad; background: #22331f; }
+
+/* Streamlit bakes .streamlit/config.toml colours into some widget styles, so
+   those elements ignore the inherited text colour and need an explicit reset. */
+[data-testid="stRadio"] label, [data-testid="stRadio"] label *,
+[data-testid="stWidgetLabel"], [data-testid="stWidgetLabel"] *,
+[data-testid="stFileUploader"] *, [data-testid="stExpander"] summary,
+[data-testid="stDownloadButton"] button, [data-testid="stLinkButton"] a,
+[data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] * { color: var(--ink); }
+[data-testid="stRadio"] label [aria-checked="true"] { color: var(--ink); }
+[data-testid="stFileUploaderDropzone"] { background: var(--paper-sunken); border-color: var(--line-strong); }
+[data-testid="stFileUploaderDropzone"] small { color: var(--muted); }
+
+/* Fields: keep the inner control filled (the wrapper behind it stays light),
+   and drop the inner border that showed through as a bright line. */
+[data-testid="stTextArea"] textarea,
+[data-testid="stTextInput"] input { border: 0 !important; background: var(--field-bg) !important; color: var(--ink); }
+[data-baseweb="textarea"], [data-baseweb="input"], [data-baseweb="base-input"],
+[data-baseweb="select"] > div { border-color: var(--field-border) !important; background: var(--field-bg) !important; }
+/* BaseWeb nests the control in extra wrappers that carry their own border. */
+[data-testid="stTextArea"] *, [data-testid="stTextInput"] * { border-color: var(--field-border) !important; }
+[data-testid="stTextArea"] textarea, [data-testid="stTextInput"] input { box-shadow: none !important; }
+[data-testid="stTextArea"] textarea::placeholder,
+[data-testid="stTextInput"] input::placeholder { color: #7d8f82 !important; }
+
+/* Portalled menus (selectbox, tooltips) render outside .stApp */
+[data-baseweb="popover"] [role="listbox"], [data-baseweb="menu"] { background: var(--paper-raised); color: var(--ink); }
+[data-baseweb="popover"] [role="option"] { color: var(--ink); }
+[data-baseweb="popover"] [role="option"]:hover { background: var(--paper-sunken); }
+[data-baseweb="tooltip"] { background: var(--paper-raised); color: var(--ink); }
+
+/* Code replies and selectbox text use theme-baked colours too */
+.stApp [data-testid="stCode"] pre, .stApp [data-testid="stCode"] code,
+.stApp [data-testid="stCode"] span { background: transparent; color: var(--ink); }
+[data-baseweb="select"] span, [data-baseweb="select"] input { color: var(--ink); }
+
+</style>

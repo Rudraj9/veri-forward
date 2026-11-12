@@ -1,5 +1,8 @@
 """Escaped HTML views for the verification flow; no verification decisions here."""
+from datetime import timezone
+from email.utils import parsedate_to_datetime
 from html import escape
+from urllib.parse import urlsplit
 
 
 VERDICTS = {
@@ -68,9 +71,95 @@ def evidence_card_html(item, index, tone):
       <div class="passage-top"><span class="source-mark">{escape((item.article.source or "?")[0].upper())}</span><b>{escape(item.article.source)}</b><small>PASSAGE {index:02d}</small></div>
       <blockquote>{escape(item.excerpt)}</blockquote>
       <a href="{escape(item.article.publisher_url or item.article.link, quote=True)}" target="_blank" rel="noopener noreferrer">{escape(item.article.title or "Read publisher source")} <span>↗</span></a>
-      <div class="passage-date">RSS publication: {escape(item.article.published or "not available")}<br>Publisher metadata: {escape(item.article.publisher_published or "not available")} · Event date not inferred</div>
+      <div class="passage-date">Published: {escape(friendly_date(item.article.published) or "not available")}<br>Page metadata: {escape(friendly_date(item.article.publisher_published) or "not available")} · Event date not inferred</div>
     </article>'''
 
 
 def empty_evidence_html(tone):
-    return f'''<div class="empty-evidence {tone}"><span aria-hidden="true">◎</span><b>No qualifying passages</b><p>No passages met the criteria for this side of the claim. Missing evidence does not establish whether a claim is true or false.</p></div>'''
+    return f'''<div class="empty-evidence {tone}"><span aria-hidden="true">◎</span><b>No qualifying passages</b><p>No passages met the criteria for this side of the claim. Missing evidence does not establish whether a claim is true or false.</p><p>Try rephrasing with the exact names, date and quantity, or review the related coverage below.</p></div>'''
+
+
+# Plain-language replacements for the pipeline's extraction_status enum.
+EXTRACTION_NOTES = {
+    "not_attempted": "not fetched",
+    "empty": "no article text",
+    "failed": "fetch failed",
+    "google_news_unresolved": "publisher link unresolved",
+}
+
+
+def source_key(article):
+    """Match an article across related_articles and the assessed evidence lists."""
+    return (article.publisher_url or article.link or "").rstrip("/").casefold()
+
+
+def friendly_date(raw):
+    """RSS dates are RFC 822; show a short, unambiguous UTC form instead."""
+    if not raw:
+        return None
+    try:
+        parsed = parsedate_to_datetime(raw)
+    except (TypeError, ValueError, IndexError):
+        return raw
+    if parsed is None:
+        return raw
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc).strftime("%d %b %Y, %H:%M UTC")
+
+
+def related_coverage_html(result):
+    """Group sources by the role they actually played in this check."""
+    supporting = {source_key(e.article) for e in result.supporting_evidence}
+    contradicting = {source_key(e.article) for e in result.contradicting_evidence}
+
+    def role(article):
+        key = source_key(article)
+        if key in supporting:
+            return "support", "Supports claim"
+        if key in contradicting:
+            return "contradict", "Challenges claim"
+        if article.extraction_status != "extracted":
+            return "muted", EXTRACTION_NOTES.get(article.extraction_status, "could not read")
+        return "muted", "Related only"
+
+    def sort_key(article):
+        tone, _ = role(article)
+        try:
+            stamp = parsedate_to_datetime(article.published).timestamp() if article.published else 0
+        except (TypeError, ValueError, IndexError):
+            stamp = 0
+        return (0 if tone != "muted" else 1, -stamp, article.title.casefold())
+
+    articles = sorted(result.related_articles, key=sort_key)
+    if not articles:
+        return '<div class="empty-evidence"><span aria-hidden="true">◎</span><b>No related coverage found</b><p>Nothing was retrieved for this claim. That is a retrieval limit, not evidence that the claim is false.</p><p>Paste a clearer claim, or open a direct publisher link, and try again.</p></div>'
+
+    cards = []
+    for article in articles:
+        tone, label = role(article)
+        url = article.publisher_url or article.link
+        date = friendly_date(article.published)
+        duplicates = list(dict.fromkeys(u for u in article.duplicate_urls if u and u != url))[:3]
+        dup_html = ""
+        if duplicates:
+            # A hostname tells the reader "same story, another outlet"; "link 1" does not.
+            links = ", ".join(
+                f'<a href="{escape(u, quote=True)}" target="_blank" rel="noopener noreferrer">'
+                f'{escape((urlsplit(u).hostname or "").removeprefix("www.") or u)}</a>'
+                for u in duplicates
+            )
+            dup_html = f'<div class="source-dup">Also published at {links}</div>'
+        cards.append(f'''<article class="source-card {tone}">
+      <div class="source-head"><span class="source-mark" aria-hidden="true">{escape((article.source or "?")[0].upper())}</span><span class="source-name">{escape(article.source or "Unknown source")}</span><span class="source-badge {tone}">{escape(label)}</span></div>
+      <a class="source-title" href="{escape(url, quote=True)}" target="_blank" rel="noopener noreferrer">{escape(article.title or "Untitled coverage")}<span aria-hidden="true"> ↗</span></a>
+      <div class="source-meta">{escape(date) if date else "Publication date unavailable"}</div>{dup_html}
+    </article>''')
+
+    used = sum(1 for article in articles if role(article)[0] != "muted")
+    return (
+        f'<div class="source-summary">{len(articles)} article{"s" if len(articles) != 1 else ""} retrieved · '
+        f'{used} used as evidence. Related coverage is context, not proof: only passages that passed the '
+        f'retrieval and NLI rules count. Dates are publication dates, not event dates.</div>'
+        f'<div class="source-grid">{"".join(cards)}</div>'
+    )

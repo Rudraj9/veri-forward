@@ -1,4 +1,4 @@
-﻿"""Review one claim at a time. Verification logic lives in core.pipeline."""
+"""Review one claim at a time. Verification logic lives in core.pipeline."""
 import sys
 from html import escape
 from pathlib import Path
@@ -8,10 +8,17 @@ from core.input_handler import prepare_input
 from core.schemas import VerifyRequest
 from core.pipeline import verify
 from core.claim_extractor import extract_claims
-from app.visuals import scanning_html, result_html, evidence_heading_html, evidence_card_html, empty_evidence_html
+from app.visuals import scanning_html, result_html, evidence_heading_html, evidence_card_html, empty_evidence_html, related_coverage_html
 
 st.set_page_config(page_title="VeriForward · Check before you share", page_icon="🔎", layout="wide")
-st.html((Path(__file__).parent / "styles.css").read_text(encoding="utf-8"))
+
+APP_DIR = Path(__file__).parent
+# Widget values survive a rerun in session_state, so the palette can be chosen
+# before the toggle itself is drawn and the theme changes without a lag frame.
+dark_mode = st.session_state.get("dark_mode", False)
+st.html((APP_DIR / "styles.css").read_text(encoding="utf-8"))
+if dark_mode:
+    st.html((APP_DIR / "styles-dark.css").read_text(encoding="utf-8"))
 
 
 def reset_review():
@@ -113,6 +120,9 @@ with main:
             else:
                 st.info("Add a complete sentence above to select a claim.")
 with aside:
+    with st.container(border=True):
+        st.caption("Appearance")
+        st.toggle("Dark mode", key="dark_mode", help="Switch palette for this session. Your choice carries across the whole check.")
     st.html('''
     <div class="guide-card"><div class="eyebrow">YOUR QUICK GUIDE</div><h3>A claim is a starting point.<br>Evidence is the next step.</h3>
      <div class="guide-item"><span>01</span><div><b>Bring the original wording</b><p>Keep names, dates, and numbers. Small details can change a claim.</p></div></div>
@@ -140,14 +150,8 @@ if "result" in st.session_state:
                 st.html(empty_evidence_html(tone))
             for index, item in enumerate(evidence, start=1):
                 st.html(evidence_card_html(item, index, tone))
-    with st.expander("Explore related coverage and extraction status"):
-        if not result.related_articles:
-            st.caption("No related articles were retrieved.")
-        for article in result.related_articles:
-            with st.container(border=True):
-                st.write(article.title)
-                st.link_button("Open source ↗", article.publisher_url or article.link)
-                st.caption(f"{article.source} · Published: {article.published or 'unknown'} · {article.extraction_status}")
+    with st.expander(f"Sources and related coverage · {len(result.related_articles)} article{'s' if len(result.related_articles) != 1 else ''}"):
+        st.html(related_coverage_html(result))
     with st.expander("Read limitations and failures", expanded=bool(result.failures)):
         for message in result.warnings + result.failures:
             st.write(message)

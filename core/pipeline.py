@@ -97,10 +97,16 @@ def verify(request: VerifyRequest, progress=None):
         status = "system_error"
     if failures:
         explanation += " Retrieval, extraction or model limitations affected this check; see the recorded failures."
-    links = list(dict.fromkeys(e.article.publisher_url for e in supports + contradicts if e.article.publisher_url))[:4]
+    seen_sources, sources = set(), []
+    for item in supports + contradicts:
+        url = item.article.publisher_url
+        if url and url not in seen_sources:
+            seen_sources.add(url)
+            sources.append(f"{item.article.source or 'Source'} — {url}")
+    sources = sources[:4]
     reply = f'Claim: {claim}\nVeriForward: {verdict.replace("_", " ")}. {explanation}\nPublisher independence and automated context checks are uncertain.'
-    if links:
-        reply += "\nEvidence sources:\n" + "\n".join(links)
+    if sources:
+        reply += "\nEvidence sources:\n" + "\n".join(sources)
     elif articles:
         reply += "\nRelated coverage only (does not verify the claim):\n" + "\n".join(a.publisher_url or a.link for a in articles[:3])
     return VerifyResponse(status=status, original_input=request.content, reviewed_claim=claim, verdict=verdict,

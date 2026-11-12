@@ -2,6 +2,16 @@
 import os
 from dataclasses import dataclass
 
+try:
+    from dotenv import load_dotenv
+except ImportError:  # optional: environment variables may be set externally
+    def load_dotenv(*_args, **_kwargs):
+        return False
+
+# Load .env before Settings reads the environment, so documented variables such
+# as OFFICIAL_DOMAINS or TESSERACT_CMD actually work from the file.
+load_dotenv()
+
 
 @dataclass(frozen=True)
 class Settings:

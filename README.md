@@ -36,12 +36,19 @@ the model cache. Model-loading failure produces an explicit abstention, never a
 similarity-based fallback. After caching, `HF_HUB_OFFLINE=1` can prevent model
 network access (live evidence retrieval still requires internet).
 
-Install Tesseract separately for screenshot input. The [official installation
-guide](https://tesseract-ocr.github.io/tessdoc/Installation.html) links Windows
-builds; include English language data. For a common Windows installation:
+Install Tesseract separately for screenshot input:
 
 ```powershell
-$env:TESSERACT_CMD = 'C:\Program Files\Tesseract-OCR\tesseract.exe'
+winget install UB-Mannheim.TesseractOCR
+```
+
+The app auto-detects the standard Windows install location
+(`C:\Program Files\Tesseract-OCR\tesseract.exe`), so no environment variable is
+needed. Set `TESSERACT_CMD` — in the shell environment or in `.env`, which is now
+loaded at startup — only for a non-standard location:
+
+```powershell
+$env:TESSERACT_CMD = 'D:\tools\Tesseract-OCR\tesseract.exe'
 & $env:TESSERACT_CMD --version
 ```
 
